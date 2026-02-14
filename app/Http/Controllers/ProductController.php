@@ -17,13 +17,13 @@ class ProductController extends Controller
         ->when($request->filled('search'),function ($q) use ($request) {
         $q->where('name','like','%'.$request->search . '%');})
 
-        ->when($request->min_price,function($q)use ($request){
+        ->when($request->filled('min_price'),function($q)use ($request){
 
         $q->where('price','>=',$request->min_price);
 
             })
 
-         ->when($request->max_price,function($q)use ($request){
+         ->when($request->filled('max_price'),function($q)use ($request){
 
         $q->where('price','<=',$request->max_price);
 
