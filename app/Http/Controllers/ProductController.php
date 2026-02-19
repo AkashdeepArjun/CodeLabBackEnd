@@ -95,14 +95,43 @@ class ProductController extends Controller
      */
     public function update(Request $request, Product $product)
     {
-        //
+
+        if($request->user()->role !== 'admin'){
+
+            return response()->json(['message'=>'unauthorized access '],403);
+
+
+        }
+
+
+        $request->validate(['name'=>'required|string|max:255','price'=>'required| numeric | min:0']);
+
+        $product->update($request->only(['name','price']));
+
+        return response()->json(['message'=>'product is updated','data'=>$product]);
+
+
+
+
     }
 
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(Product $product)
+    public function destroy(Request $request,Product $product)
     {
+
+
+        if($request->user()->role !== 'admin'){
+
+            return response()->json(['message'=>'unauthorized access '],403);
+
+
+        }
+
+
+
+
         $product->delete();
         return response()->json(['message'=>'Product Deleted Successfully']);
 
