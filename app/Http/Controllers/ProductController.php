@@ -3,13 +3,17 @@
 namespace App\Http\Controllers;
 
 use App\Models\Product;
+use Illuminate\Container\Attributes\Auth;
+use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 
 class ProductController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     */
+
+    use AuthorizesRequests;
+
+
     public function index(Request $request)
     {
 
@@ -55,20 +59,28 @@ class ProductController extends Controller
     public function store(Request $request)
     {
 
-    $validated = $request->validate(['name'=>'required|string|max:255',
+
+    Log::info('CREATIOM OF PRODUCT BY  USER EMAIL '.auth()->user()->email . ' WITH ID '. $request->user()->id ) ;
+
+  try{   $validated = $request->validate(['name'=>'required|string|max:255',
         'price'=>'required | numeric | min:0',
         'description'=>'nullable | string'
-
 ]);
 
-    $product =  Product::create($validated);
+    $product =  Product::create(['name'=>$validated['name'],'price'=>$validated['price'],'description'=>$validated['description'],'user_id'=>$request->user()->id]);
 
 
     /* return redirect()->route('products.index'); */
 
     /* return response()->json($product,201); */
 
-    return response(['message'=>'Product Created ','data'=>$product],201);
+    return response(['message'=>'Product Created ','data'=>$product],201); }catch(\Exception $e){
+
+        Log::error("ERROR AA GYA ".$e->getMessage());
+
+        return response(['message'=>$e->getMessage()],401);
+
+        }
 
 
 
@@ -96,19 +108,24 @@ class ProductController extends Controller
     public function update(Request $request, Product $product)
     {
 
-        if($request->user()->role !== 'admin'){
 
-            return response()->json(['message'=>'unauthorized access '],403);
+       try{
 
 
-        }
+        Log::info(" USER ID === PRODUCT USER ID". $request->user()->id===$product->user_id );
+
+         $this->authorize('update',$product);
 
 
         $request->validate(['name'=>'required|string|max:255','price'=>'required| numeric | min:0']);
 
         $product->update($request->only(['name','price']));
 
-        return response()->json(['message'=>'product is updated','data'=>$product]);
+        return response()->json(['message'=>'product is updated','data'=>$product]); }catch(\Exception $e){
+
+            Log::error('UPDATE ERROR FROM USER  '. auth()->user()->email . '   WITH ROLE AS '. auth()->user()->role .  ' ERROR IS '. $e->getMessage() );
+
+        }
 
 
 
@@ -122,18 +139,19 @@ class ProductController extends Controller
     {
 
 
-        if($request->user()->role !== 'admin'){
-
-            return response()->json(['message'=>'unauthorized access '],403);
-
-
-        }
-
-
-
-
+      try{   $this->authorize('delete',$product);
         $product->delete();
-        return response()->json(['message'=>'Product Deleted Successfully']);
+        return response()->json(['message'=>'Product Deleted Successfully']); }
+
+    catch(\Exception $e){
+
+
+            Log::error('DELETE ERROR FROM USER  '. auth()->user()->email . '   WITH ROLE AS '. auth()->user()->role .  ' ERROR IS '. $e->getMessage() );
+
 
     }
+
+
+}
+
 }
