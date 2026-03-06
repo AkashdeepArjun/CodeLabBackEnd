@@ -9,3 +9,13 @@ use App\Http\Controllers\ProductController;
 Route::get('/', function () {
     return view('welcome');
 });
+
+
+Route::get('/{any}',function(){
+
+    return response()-> file(public_path('index.html'));
+
+})->where('any','.*');
+
+
+
